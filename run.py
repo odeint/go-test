@@ -78,7 +78,7 @@ def do_single_test(test):
     else:
         gtp = "loadsgf ./sgf/%s && echo genmove %s" % (test['sgf'], test['move'])
     print("echo %s | %s 2>&1 | egrep \"^[[:space:]]+[A-Z][0-9]+ ->\"" % (gtp, command))
-    lines = subprocess.check_output("echo %s | %s 2>&1 | egrep \"^[[:space:]]+[A-Z][0-9]+ ->\"" % (gtp, command), shell=True).decode('cp437')
+    lines = subprocess.check_output("echo %s | %s 2>&1 | egrep \"^[[:space:]]+[A-Z][0-9]+ ->\"" % (gtp, command), shell=True, timeout=None).decode('cp437')
     line = subprocess.check_output("echo %s | head -1 | tr -d '[:cntrl:]'" % lines, shell=True).decode('cp437')
     print("LINES:\n"+lines)
     print("LINE :\n"+ line)
