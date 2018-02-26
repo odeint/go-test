@@ -74,14 +74,17 @@ def mock_single_test(test):
 
 def do_single_test(test):
     if test.get('number'):
-        gtp = "loadsgf ./sgf/%s %s\ngenmove %s" % (test['sgf'], test['number'], test['move'])
+        gtp = "loadsgf ./sgf/%s %s && echo genmove %s" % (test['sgf'], test['number'], test['move'])
     else:
-        gtp = "loadsgf ./sgf/%s\ngenmove %s" % (test['sgf'], test['move'])
-    lines = subprocess.check_output("echo '%s' | %s 2>&1 | egrep -- '^\s+[A-Z][0-9]+ +->'" % (gtp, command), shell=True)
-    line = subprocess.check_output("echo '%s' | head -1 | tr -d '[:cntrl:]'" % lines, shell=True)
+        gtp = "loadsgf ./sgf/%s && echo genmove %s" % (test['sgf'], test['move'])
+    print("echo %s | %s 2>&1 | egrep \"^[[:space:]]+[A-Z][0-9]+ ->\"" % (gtp, command))
+    lines = subprocess.check_output("echo %s | %s 2>&1 | egrep \"^[[:space:]]+[A-Z][0-9]+ ->\"" % (gtp, command), shell=True).decode('cp437')
+    line = subprocess.check_output("echo %s | head -1 | tr -d '[:cntrl:]'" % lines, shell=True).decode('cp437')
+    print("LINES:\n"+lines)
+    print("LINE :\n"+ line)
     debug("%s\n" % line)
 
-    match = re.search('\(V: (\d+\.\d+)%\).+PV: (.+)', line)
+    match = re.search('\(V: (\d+\.\d+)%\).+PV: (.+)', lines)
     win_rate = float(match.group(1))
     moves = match.group(2).split(' ')
     next_move = moves[0]
@@ -126,7 +129,7 @@ for test in tests:
     my_print("%s\n" % test['sgf'])
     if test['group'] in MULTI_RUN_GROUPS:
         results = []
-        for i in xrange(0, DEFAULT_MULTI_RUNS):
+        for i in range(0, DEFAULT_MULTI_RUNS):
             my_print("%s " % i)
             (line, result) = do_single_test(test)
             results.append(result)
@@ -143,3 +146,4 @@ for group in group_score:
     elif group_score[group] == group_total[group]:
         color = bcolors.OKGREEN
     my_print("%s: %s[%s/%s PASSES]%s\n" % (group, color, group_score[group], group_total[group], bcolors.ENDC))
+#%%
