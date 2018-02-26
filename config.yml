@@ -1,5 +1,5 @@
 ---
-command: /Users/Bood/mypro/leela-zero/bin/leelaz -d -t 1 -p 1600 --noponder -w /Users/Bood/mypro/leela-zero/bin/af9
+command: C:\Users\patro\Downloads\leela-zero-0.10-source\msvc\x64\Release\leelaz.exe -d -t 1 -p 1600 --noponder -w C:\Users\patro\Downloads\leela-zero-0.10-source\msvc\x64\Release\leelaz-model-3008000.txt
 tests:
   # Ladder tests
   - sgf: ladder1.sgf
