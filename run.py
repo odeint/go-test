@@ -5,6 +5,9 @@ import re
 import subprocess
 import yaml
 import argparse
+import pexpect
+from pexpect import popen_spawn
+import sys
 
 
 class bcolors:
@@ -73,18 +76,43 @@ def mock_single_test(test):
     return ("TEST", result)
 
 def do_single_test(test):
+    cmd = command.replace("\\", "/")
+    child = pexpect.popen_spawn.PopenSpawn(cmd, timeout=30, maxread=2000, searchwindowsize=None, 
+                                       logfile=None, cwd=None, env=None, encoding=None, codec_errors='strict')
+    
+    child.expect('Leela:')
+    lol1 = child.before
+    lol1s = lol1.decode("unicode_escape")
     if test.get('number'):
+        child.sendline('loadsgf ./sgf/%s %s' % (test['sgf'], test['number']))
         gtp = "loadsgf ./sgf/%s %s && echo genmove %s" % (test['sgf'], test['number'], test['move'])
     else:
         gtp = "loadsgf ./sgf/%s && echo genmove %s" % (test['sgf'], test['move'])
-    print("echo %s | %s 2>&1 | egrep \"^[[:space:]]+[A-Z][0-9]+ ->\"" % (gtp, command))
-    lines = subprocess.check_output("echo %s | %s 2>&1 | egrep \"^[[:space:]]+[A-Z][0-9]+ ->\"" % (gtp, command), shell=True, timeout=None).decode('cp437')
-    line = subprocess.check_output("echo %s | head -1 | tr -d '[:cntrl:]'" % lines, shell=True).decode('cp437')
-    print("LINES:\n"+lines)
+        child.sendline('loadsgf ./sgf/%s' % test['sgf'])
+    
+    line = "loadsgf ./sgf/%s" % test['sgf']
+    child.expect('Leela:')
+    lol2 = child.before
+    lol2s = lol2.decode("unicode_escape")
+    child.sendline('genmove %s' % test['move'])
+    child.expect('Leela:')
+    lol3 = child.before
+    lol3s = lol3.decode("unicode_escape")
+    print(lol3s)
+    child.sendline('quit')
+      
+    lines = []
+    for outline in lol3s.splitlines():
+        src = re.search("->",outline)
+        if src:
+            print(src.string)
+            lines.append(src.string)
+
+    print("LINES:\n"+str(lines))
     print("LINE :\n"+ line)
     debug("%s\n" % line)
-
-    match = re.search('\(V: (\d+\.\d+)%\).+PV: (.+)', lines)
+    
+    match = re.search('\(V: (\d+\.\d+)%\).+PV: (.+)', lines[0])
     win_rate = float(match.group(1))
     moves = match.group(2).split(' ')
     next_move = moves[0]
@@ -147,3 +175,11 @@ for group in group_score:
         color = bcolors.OKGREEN
     my_print("%s: %s[%s/%s PASSES]%s\n" % (group, color, group_score[group], group_total[group], bcolors.ENDC))
 #%%
+lines = []
+for line in lol3s.splitlines():
+    src = re.search("->",line)
+    if src:
+        print(src.string)
+        lines.append(src.string)
+#%%
+match = re.search('\(V: (\d+\.\d+)%\).+PV: (.+)', lines[0])
