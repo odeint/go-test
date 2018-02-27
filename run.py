@@ -26,7 +26,7 @@ FAIL_STATUS = "%s[FAIL]%s" % (bcolors.FAIL, bcolors.ENDC)
 
 
 MULTI_RUN_GROUPS = ("ladder")
-DEFAULT_MULTI_RUNS = 10
+DEFAULT_MULTI_RUNS = 1
 
 
 group_score = {}
@@ -85,9 +85,7 @@ def do_single_test(test):
     lol1s = lol1.decode("unicode_escape")
     if test.get('number'):
         child.sendline('loadsgf ./sgf/%s %s' % (test['sgf'], test['number']))
-        gtp = "loadsgf ./sgf/%s %s && echo genmove %s" % (test['sgf'], test['number'], test['move'])
     else:
-        gtp = "loadsgf ./sgf/%s && echo genmove %s" % (test['sgf'], test['move'])
         child.sendline('loadsgf ./sgf/%s' % test['sgf'])
     
     line = "loadsgf ./sgf/%s" % test['sgf']
@@ -110,9 +108,11 @@ def do_single_test(test):
 
     print("LINES:\n"+str(lines))
     print("LINE :\n"+ line)
+    print("LINES0 :\n"+lines[0])
     debug("%s\n" % line)
     
-    match = re.search('\(V: (\d+\.\d+)%\).+PV: (.+)', lines[0])
+    bestline = lines[0]
+    match = re.search('\(V: (\d+\.\d+)%\).+PV: (.+)', bestline)
     win_rate = float(match.group(1))
     moves = match.group(2).split(' ')
     next_move = moves[0]
@@ -175,11 +175,3 @@ for group in group_score:
         color = bcolors.OKGREEN
     my_print("%s: %s[%s/%s PASSES]%s\n" % (group, color, group_score[group], group_total[group], bcolors.ENDC))
 #%%
-lines = []
-for line in lol3s.splitlines():
-    src = re.search("->",line)
-    if src:
-        print(src.string)
-        lines.append(src.string)
-#%%
-match = re.search('\(V: (\d+\.\d+)%\).+PV: (.+)', lines[0])
